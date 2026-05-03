@@ -29,26 +29,29 @@ const NotificationsView = () => {
     if (!currentUser) return;
     setLoading(true);
 
-    // Fetch notifications and filter/sort on client side to avoid index requirements
-    const q = query(
-      collection(db, "notifications"),
-      limit(100)
-    );
+    // Direct collection listener for maximum reliability
+    const notificationsRef = collection(db, "notifications");
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const unsubscribe = onSnapshot(notificationsRef, (querySnapshot) => {
       const fetched = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        const target = data.targetStudent ? data.targetStudent.toLowerCase() : '';
-        const userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
+        const target = (data.targetStudent || '').toLowerCase();
+        const userEmail = (currentUser.email || '').toLowerCase();
         
-        if (target === 'all' || target === userEmail) {
+        // Broad matching for 'all', 'students', or the specific email
+        if (target === 'all' || target === 'students' || target === userEmail) {
           fetched.push({ id: doc.id, ...data });
         }
       });
       
-      // Sort on client side
-      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // Robust sorting: prioritize items with valid dates, then sort descending
+      fetched.sort((a,b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        return dateB - dateA;
+      });
+      
       setNotifications(fetched);
       setLoading(false);
       setErrorMsg(null);
