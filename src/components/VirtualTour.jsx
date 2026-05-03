@@ -63,60 +63,47 @@ const Photosphere = ({ locationId, onHotspotClick }) => {
   const data = locations[locationId];
   const texture = useLoader(THREE.TextureLoader, data.texture);
   
-  // Ensure the texture maps correctly as an equirectangular image
   useMemo(() => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
     texture.colorSpace = THREE.SRGBColorSpace;
   }, [texture]);
 
+  // Using a Curved Plane instead of a Sphere to prevent distortion of regular photos
   return (
     <group>
-      {/* 360-degree Sphere mapping the image inside out */}
-      <mesh>
-        <sphereGeometry args={[50, 64, 64]} />
-        <meshBasicMaterial map={texture} side={THREE.BackSide} />
+      {/* Background Plane for the photo */}
+      <mesh position={[0, 0, -20]}>
+        <planeGeometry args={[60, 45]} />
+        <meshBasicMaterial map={texture} transparent />
       </mesh>
       
-      {/* Render Hotspots in 3D Space */}
+      {/* Render Hotspots in 3D Space - Relative to the plane */}
       {data.hotspots.map((hotspot) => (
-        <group key={hotspot.id} position={hotspot.position}>
-          {/* Inner glowing sphere for hotspot */}
+        <group key={hotspot.id} position={[hotspot.position[0], hotspot.position[1], -19]}>
           <mesh onClick={() => onHotspotClick(hotspot.target)}>
-            <sphereGeometry args={[1.2, 32, 32]} />
+            <sphereGeometry args={[1, 32, 32]} />
             <meshBasicMaterial color="#818cf8" transparent opacity={0.6} depthTest={false} />
           </mesh>
-          {/* HTML Overlay Label - Premium Redesign */}
           <Html center distanceFactor={25} zIndexRange={[100, 0]}>
             <div 
               onClick={() => onHotspotClick(hotspot.target)}
               style={{
                 background: 'rgba(15, 23, 42, 0.85)',
                 color: 'white',
-                padding: '1rem 2rem',
+                padding: '0.8rem 1.5rem',
                 borderRadius: '40px',
                 fontWeight: '800',
-                fontSize: '1.25rem',
+                fontSize: '1rem',
                 border: '2px solid rgba(129, 140, 248, 0.6)',
-                boxShadow: '0 15px 40px rgba(0,0,0,0.8), 0 0 30px rgba(129, 140, 248, 0.5)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
                 backdropFilter: 'blur(16px)',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                display: 'flex', alignItems: 'center', gap: '1rem',
+                display: 'flex', alignItems: 'center', gap: '0.8rem',
                 pointerEvents: 'auto',
                 transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
-              onMouseEnter={(e) => { 
-                e.currentTarget.style.transform = 'scale(1.1) translateY(-5px)'; 
-                e.currentTarget.style.background = 'linear-gradient(135deg, #818cf8, #a855f7)'; 
-                e.currentTarget.style.borderColor = '#fff';
-              }}
-              onMouseLeave={(e) => { 
-                e.currentTarget.style.transform = 'scale(1) translateY(0)'; 
-                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)'; 
-                e.currentTarget.style.borderColor = 'rgba(129, 140, 248, 0.6)';
-              }}
             >
-              <Eye size={22} color="#fff" />
+              <Eye size={18} color="#fff" />
               {hotspot.name}
             </div>
           </Html>
@@ -318,15 +305,15 @@ export default function VirtualTour() {
           <Photosphere locationId={currentLocation} onHotspotClick={setCurrentLocation} />
         </Suspense>
         
-        {/* Controls to look around from inside the globe */}
         <OrbitControls 
           enablePan={false}
           enableZoom={false} 
           enableRotate={true}
-          reverseOrbit={false} // Adjusting drag direction to feel natural
-          rotateSpeed={-0.6}   // Inverting rotation speed to match drag direction for back side
-          minDistance={0.1}
-          maxDistance={30}
+          minAzimuthAngle={-Math.PI / 6}
+          maxAzimuthAngle={Math.PI / 6}
+          minPolarAngle={Math.PI / 2.5}
+          maxPolarAngle={Math.PI / 1.5}
+          rotateSpeed={0.4}
         />
       </Canvas>
     </div>
