@@ -138,7 +138,7 @@ const CameraController = ({ fov }) => {
 export default function VirtualTour() {
   const [currentLocation, setCurrentLocation] = useState('entrance');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fov, setFov] = useState(70);
+  const [fov, setFov] = useState(100);
   const containerRef = React.useRef(null);
 
   const toggleFullscreen = () => {
@@ -153,16 +153,16 @@ export default function VirtualTour() {
     }
   };
 
-  const handleZoomIn = () => setFov(prev => Math.max(prev - 10, 30));
-  const handleZoomOut = () => setFov(prev => Math.min(prev + 10, 110));
+  const handleZoomIn = () => setFov(prev => Math.max(prev - 10, 40));
+  const handleZoomOut = () => setFov(prev => Math.min(prev + 10, 130));
 
   const handleWheel = (e) => {
     // Only scroll zoom if they're holding a modifier or simply allow wheel directly
     // Using simple wheel logic here
     if (e.deltaY > 0) {
-      setFov(prev => Math.min(prev + 5, 110));
+      setFov(prev => Math.min(prev + 5, 130));
     } else {
-      setFov(prev => Math.max(prev - 5, 30));
+      setFov(prev => Math.max(prev - 5, 40));
     }
   };
 
