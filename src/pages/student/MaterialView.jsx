@@ -12,13 +12,15 @@ const MaterialView = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "materials"), limit(100));
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
       snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Client-side sort
+      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setMaterials(fetched);
       setLoading(false);
       setErrorMsg(null);

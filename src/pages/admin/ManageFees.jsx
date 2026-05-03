@@ -18,13 +18,15 @@ const ManageFees = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "fees"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "fees"), limit(150));
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
       snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Sort on client side
+      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setFees(fetched);
       setLoading(false);
     }, (err) => {

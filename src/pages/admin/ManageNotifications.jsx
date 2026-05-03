@@ -17,12 +17,14 @@ const ManageNotifications = () => {
   const [target, setTarget] = useState('All Students');
 
   useEffect(() => {
-    const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(30));
+    const q = query(collection(db, "notifications"), limit(100));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetched = [];
       querySnapshot.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Sort on client side
+      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setNotifications(fetched);
       setLoading(false);
     }, (err) => {

@@ -20,13 +20,15 @@ const ManageMaterials = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "materials"), limit(200));
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
       snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Sort on client side
+      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setMaterials(fetched);
       setLoading(false);
     }, (err) => {

@@ -17,13 +17,15 @@ const ManageAttendance = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "attendance"), orderBy("date", "desc"), limit(50));
+    const q = query(collection(db, "attendance"), limit(100));
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
       snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Client-side sort
+      fetched.sort((a,b) => new Date(b.date) - new Date(a.date));
       setRecords(fetched);
       setLoading(false);
     }, (err) => {

@@ -27,29 +27,30 @@ const NotificationsView = () => {
 
   useEffect(() => {
     if (!currentUser) return;
-
     setLoading(true);
+
+    // Fetch notifications and filter/sort on client side to avoid index requirements
     const q = query(
-      collection(db, "notifications"), 
-      or(
-         where("targetStudent", "==", "all"),
-         where("targetStudent", "==", currentUser.email || currentUser.uid)
-      )
+      collection(db, "notifications"),
+      limit(100)
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetched = [];
       querySnapshot.forEach((doc) => {
-        fetched.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        if (data.targetStudent === 'all' || data.targetStudent === currentUser.email) {
+          fetched.push({ id: doc.id, ...data });
+        }
       });
       
-      // Sort manually as we don't have a composite index for createdAt + targetStudent filter yet
+      // Sort on client side
       fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setNotifications(fetched);
       setLoading(false);
       setErrorMsg(null);
     }, (err) => {
-      console.error(err);
+      console.error("Notification sync error:", err);
       setErrorMsg("Neural link interrupted: " + err.message);
       setLoading(false);
     });

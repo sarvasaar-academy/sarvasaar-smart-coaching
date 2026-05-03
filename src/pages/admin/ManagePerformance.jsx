@@ -19,13 +19,15 @@ const ManagePerformance = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, "performance"), orderBy("createdAt", "desc"), limit(50));
+    const q = query(collection(db, "performance"), limit(100));
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
       snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
+      // Sort on client side
+      fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setResults(fetched);
       setLoading(false);
     }, (err) => {
