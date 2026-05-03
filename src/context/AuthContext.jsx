@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
   // Sign Up a new user
   const signup = async (email, password, role = 'student', name = '') => {
     // SECURITY: Auto-assign admin to the master admin email, force all others to student
-    const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com'];
+    const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com', 'admin@gmail.com'];
     const finalRole = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'student';
 
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
   // Login an existing user
   const login = async (email, password, requestedRole = null) => {
     // MAGICAL ADMIN AUTO-CREATION: If master admin tries to login but hasn't created an account, auto-create it.
-    const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com'];
+    const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com', 'admin@gmail.com'];
     if (adminEmails.includes(email.toLowerCase())) {
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser(user);
         if (user) {
           // 100% SECURE HARDCODE: If it's the master admin, they are NEVER a student.
-          const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com'];
+          const adminEmails = ['master@sarvasaar.edu', 'amitravalpunsari@gmail.com', 'admin@gmail.com'];
           if (adminEmails.includes(user.email?.toLowerCase())) {
             setUserRole('admin');
             setLoading(false);
