@@ -6,35 +6,55 @@ import { motion } from 'framer-motion';
 import { MapPin, Eye, MousePointerClick, Maximize, Minimize, Plus, Minus } from 'lucide-react';
 import { useThree } from '@react-three/fiber';
 
-// Import our newly generated 360 equirectangular panoramas
-import mainCampusImg from '../assets/panoramas/main_campus.png';
-import libraryImg from '../assets/panoramas/library.png';
-import sportsArenaImg from '../assets/panoramas/sports_arena.png';
+// Import the user-uploaded panoramas
+import img1 from '../assets/panoramas/1.jpeg';
+import img2 from '../assets/panoramas/2.jpeg';
+import img3 from '../assets/panoramas/3.jpeg';
+import img4 from '../assets/panoramas/4.jpeg';
+import img5 from '../assets/panoramas/5.jpeg';
 
 const locations = {
-  main: {
-    id: 'main',
-    name: 'Bus Stand Entrance',
-    texture: mainCampusImg,
+  entrance: {
+    id: 'entrance',
+    name: 'Main Entrance',
+    texture: img1,
     hotspots: [
-      { id: 'library', name: 'Enter Corridors', position: [25, 0, -35], target: 'library' },
-      { id: 'arena', name: 'Go to Playground', position: [-40, -5, 10], target: 'arena' }
+      { id: 'reception', name: 'Enter Reception', position: [20, 0, -30], target: 'reception' }
     ]
   },
-  library: {
-    id: 'library',
-    name: 'School Corridors',
-    texture: libraryImg,
+  reception: {
+    id: 'reception',
+    name: 'Reception Office',
+    texture: img3,
     hotspots: [
-      { id: 'main', name: 'Back to Bus Stand', position: [-25, 0, 30], target: 'main' }
+      { id: 'entrance', name: 'Back to Entrance', position: [-20, 0, 30], target: 'entrance' },
+      { id: 'corridor', name: 'Go to Corridor', position: [30, 0, -10], target: 'corridor' }
     ]
   },
-  arena: {
-    id: 'arena',
-    name: 'School Playground',
-    texture: sportsArenaImg,
+  corridor: {
+    id: 'corridor',
+    name: 'Main Corridor',
+    texture: img2,
     hotspots: [
-      { id: 'main', name: 'Back to Bus Stand', position: [35, -2, -20], target: 'main' }
+      { id: 'reception', name: 'Back to Reception', position: [-30, 0, 10], target: 'reception' },
+      { id: 'lab', name: 'Enter Computer Lab', position: [25, 0, -25], target: 'lab' },
+      { id: 'hall', name: 'Go to Seminar Hall', position: [10, 0, -40], target: 'hall' }
+    ]
+  },
+  lab: {
+    id: 'lab',
+    name: 'Computer Lab',
+    texture: img4,
+    hotspots: [
+      { id: 'corridor', name: 'Back to Corridor', position: [-25, 0, 25], target: 'corridor' }
+    ]
+  },
+  hall: {
+    id: 'hall',
+    name: 'Seminar Hall',
+    texture: img5,
+    hotspots: [
+      { id: 'corridor', name: 'Back to Corridor', position: [-10, 0, 40], target: 'corridor' }
     ]
   }
 };
@@ -116,7 +136,7 @@ const CameraController = ({ fov }) => {
 };
 
 export default function VirtualTour() {
-  const [currentLocation, setCurrentLocation] = useState('main');
+  const [currentLocation, setCurrentLocation] = useState('entrance');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fov, setFov] = useState(70);
   const containerRef = React.useRef(null);
