@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 
 const MaterialView = () => {
   const [materials, setMaterials] = useState([]);

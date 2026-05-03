@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, addDoc, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc, limit } from 'firebase/firestore';
 import { Receipt, Wallet, Calendar, Trash2, CheckCircle2, Clock, Search, AlertCircle, CreditCard, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';

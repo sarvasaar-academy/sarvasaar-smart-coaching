@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { storage, db } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -11,38 +11,26 @@ const DigitalLocker = () => {
   const [errorMsg, setErrorMsg] = useState(null);
   const { currentUser } = useAuth();
 
-  const fetchFiles = useCallback(async () => {
-    if (!currentUser) return;
-    const LOCAL_STORAGE_KEY = `lockers_${currentUser.uid}`;
-    
-    // First, sync perfectly with persistent local cache
-    const localFilesData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (localFilesData) {
-        try {
-            setFiles(JSON.parse(localFilesData));
-        } catch(e) {}
-    }
-
-    try {
-      const q = query(collection(db, "lockers"), where("userId", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q);
-      if(!querySnapshot.empty) {
-          const fetchedFiles = [];
-          querySnapshot.forEach((doc) => {
-            fetchedFiles.push({ id: doc.id, ...doc.data() });
-          });
-          setFiles(fetchedFiles);
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(fetchedFiles));
-      }
-      setErrorMsg(null);
-    } catch (err) {
-      console.warn("Firebase fetch bypassed (using secure local persistence):", err.message);
-    }
-  }, [currentUser]);
-
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    if (!currentUser) return;
+    
+    // Sync with persistent cloud storage
+    const q = query(collection(db, "lockers"), where("userId", "==", currentUser.uid));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const fetchedFiles = [];
+      snap.forEach((doc) => {
+        fetchedFiles.push({ id: doc.id, ...doc.data() });
+      });
+      setFiles(fetchedFiles);
+      localStorage.setItem(`lockers_${currentUser.uid}`, JSON.stringify(fetchedFiles));
+      setErrorMsg(null);
+    }, (err) => {
+      console.warn("Real-time locker sync failed:", err.message);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];

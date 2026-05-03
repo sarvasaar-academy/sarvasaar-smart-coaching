@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { storage, db } from '../../firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 import { Cloud, Upload, Trash2, FileText, Download, ExternalLink, Search, Clock, AlertCircle, HardDrive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, or, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, or, onSnapshot, limit } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
