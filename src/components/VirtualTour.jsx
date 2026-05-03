@@ -65,22 +65,25 @@ const Photosphere = ({ locationId, onHotspotClick }) => {
   
   useMemo(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
+    // Pushing the wrap to repeat slightly to give more room
+    texture.wrapS = THREE.MirroredRepeatWrapping;
+    texture.repeat.set(1.2, 1); 
+    texture.offset.set(-0.1, 0);
   }, [texture]);
 
-  // Using a Curved Plane instead of a Sphere to prevent distortion of regular photos
   return (
     <group>
-      {/* Background Plane for the photo */}
-      <mesh position={[0, 0, -20]}>
-        <planeGeometry args={[60, 45]} />
-        <meshBasicMaterial map={texture} transparent />
+      {/* 360-degree Sphere - The soul of the 3D map */}
+      <mesh>
+        <sphereGeometry args={[50, 64, 64]} />
+        <meshBasicMaterial map={texture} side={THREE.BackSide} />
       </mesh>
       
-      {/* Render Hotspots in 3D Space - Relative to the plane */}
+      {/* Hotspots in 3D Space */}
       {data.hotspots.map((hotspot) => (
-        <group key={hotspot.id} position={[hotspot.position[0], hotspot.position[1], -19]}>
+        <group key={hotspot.id} position={hotspot.position}>
           <mesh onClick={() => onHotspotClick(hotspot.target)}>
-            <sphereGeometry args={[1, 32, 32]} />
+            <sphereGeometry args={[1.5, 32, 32]} />
             <meshBasicMaterial color="#818cf8" transparent opacity={0.6} depthTest={false} />
           </mesh>
           <Html center distanceFactor={25} zIndexRange={[100, 0]}>
@@ -100,7 +103,7 @@ const Photosphere = ({ locationId, onHotspotClick }) => {
                 whiteSpace: 'nowrap',
                 display: 'flex', alignItems: 'center', gap: '0.8rem',
                 pointerEvents: 'auto',
-                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                transition: 'all 0.3s'
               }}
             >
               <Eye size={18} color="#fff" />
@@ -309,11 +312,8 @@ export default function VirtualTour() {
           enablePan={false}
           enableZoom={false} 
           enableRotate={true}
-          minAzimuthAngle={-Math.PI / 6}
-          maxAzimuthAngle={Math.PI / 6}
-          minPolarAngle={Math.PI / 2.5}
-          maxPolarAngle={Math.PI / 1.5}
-          rotateSpeed={0.4}
+          rotateSpeed={-0.5}
+          reverseOrbit={false}
         />
       </Canvas>
     </div>
