@@ -8,7 +8,7 @@ const SchoolMap = () => {
   // Exact location of Gurukul Education and Research (Sarvasaar Academy)
   const lat = "23.4653654";
   const lng = "73.3056512";
-  const mapSrc = `https://maps.google.com/maps?q=GURUKUL+EDUCATION+AND+RESEARCH,${lat},${lng}&t=m&z=17&ie=UTF8&iwloc=&output=embed`;
+  const mapSrc = `https://maps.google.com/maps?q=GURUKUL%20EDUCATION%20AND%20RESEARCH,%20Sun%20arcade,%20Modasa&t=m&z=17&ie=UTF8&iwloc=B&output=embed`;
   const exactLink = "https://www.google.com/maps/place/GURUKUL+EDUCATION+AND+RESEARCH/@23.4653654,73.3030763,17z/";
 
   return (
