@@ -65,21 +65,32 @@ const Photosphere = ({ locationId, onHotspotClick }) => {
   
   useMemo(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
-    // Pushing the wrap to repeat slightly to give more room
-    texture.wrapS = THREE.MirroredRepeatWrapping;
-    texture.repeat.set(1.2, 1); 
-    texture.offset.set(-0.1, 0);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.wrapS = THREE.RepeatWrapping;
+    // Set repeat to 1 but handle the aspect ratio in geometry
+    texture.repeat.set(1, 1);
   }, [texture]);
 
   return (
     <group>
-      {/* 360-degree Sphere - The soul of the 3D map */}
+      {/* 3D Cylinder - Much better for regular photos than a sphere */}
       <mesh>
-        <sphereGeometry args={[50, 64, 64]} />
-        <meshBasicMaterial map={texture} side={THREE.BackSide} />
+        <cylinderGeometry args={[50, 50, 70, 64, 1, true]} />
+        <meshBasicMaterial map={texture} side={THREE.BackSide} transparent />
       </mesh>
       
-      {/* Hotspots in 3D Space */}
+      {/* Floor and Ceiling to close the cylinder gaps with a premium dark feel */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -35, 0]}>
+        <circleGeometry args={[50, 64]} />
+        <meshBasicMaterial color="#050508" />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 35, 0]}>
+        <circleGeometry args={[50, 64]} />
+        <meshBasicMaterial color="#050508" />
+      </mesh>
+
+      {/* Hotspots */}
       {data.hotspots.map((hotspot) => (
         <group key={hotspot.id} position={hotspot.position}>
           <mesh onClick={() => onHotspotClick(hotspot.target)}>
