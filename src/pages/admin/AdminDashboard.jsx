@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import {
   PieChart, Pie, Cell, Tooltip as ChartTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
@@ -50,40 +50,42 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if(activeTab === 'overview') fetchAnalytics();
+    if (activeTab !== 'overview') return;
+
+    setLoading(true);
+    
+    // Set up real-time listeners for all key metrics
+    const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+      setStats(prev => ({ ...prev, users: snap.size }));
+    });
+
+    const unsubFees = onSnapshot(collection(db, "fees"), (snap) => {
+      let totalReq = 0;
+      let collected = 0;
+      snap.forEach(doc => {
+        const f = doc.data();
+        totalReq += Number(f.amount);
+        if (f.status === 'Paid') collected += Number(f.amount);
+      });
+      setStats(prev => ({ ...prev, totalFees: totalReq, collectedFees: collected }));
+    });
+
+    const unsubLockers = onSnapshot(collection(db, "lockers"), (snap) => {
+      setStats(prev => ({ ...prev, documents: snap.size }));
+    });
+
+    const unsubPerf = onSnapshot(collection(db, "performance"), (snap) => {
+      setStats(prev => ({ ...prev, perfLogs: snap.size }));
+      setLoading(false); // Only stop loading after at least one vital metric set resolves
+    });
+
+    return () => {
+      unsubUsers();
+      unsubFees();
+      unsubLockers();
+      unsubPerf();
+    };
   }, [activeTab]);
-
-  const fetchAnalytics = async () => {
-      setLoading(true);
-      try {
-          const usersSnap = await getDocs(collection(db, "users"));
-          const feesSnap = await getDocs(collection(db, "fees"));
-          const lockSnap = await getDocs(collection(db, "lockers"));
-          const perfSnap = await getDocs(collection(db, "results"));
-          
-          let totalReq = 0;
-          let collected = 0;
-          
-          feesSnap.forEach(doc => {
-              const f = doc.data();
-              totalReq += Number(f.amount);
-              if(f.status === 'Paid') collected += Number(f.amount);
-          });
-
-          setStats({
-              users: usersSnap.size,
-              totalFees: totalReq,
-              collectedFees: collected,
-              documents: lockSnap.size,
-              perfLogs: perfSnap.size
-          });
-
-      } catch(err) {
-          console.error("Dashboard Analytics Error:", err);
-      } finally {
-          setLoading(false);
-      }
-  };
 
   const COLORS = ['#10b981', '#ef4444'];
   const feeData = [

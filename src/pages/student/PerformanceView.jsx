@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import {
   BarChart,
@@ -21,35 +21,34 @@ const PerformanceView = () => {
   
   const [filterExam, setFilterExam] = useState('All');
 
-  const fetchResults = useCallback(async () => {
+  useEffect(() => {
     if(!currentUser) return;
-    try {
-      const q = query(
-        collection(db, "results"), 
-        where("studentId", "==", currentUser.email || currentUser.uid),
-      );
-      // Note: Firestore requires a composite index to run where() and orderBy() on different fields.
-      // So fetching and sorting locally for now.
-      const querySnapshot = await getDocs(q);
+    
+    setLoading(true);
+    const q = query(
+      collection(db, "performance"), 
+      where("studentId", "==", currentUser.email || currentUser.uid),
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       
       // Sort descending by date
       fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setResults(fetched);
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Failed to load performance metrics: " + err.message);
-    } finally {
       setLoading(false);
-    }
-  }, [currentUser]);
+      setErrorMsg(null);
+    }, (err) => {
+      console.error(err);
+      setErrorMsg("Neural link interrupted: " + err.message);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchResults();
-  }, [fetchResults]);
+    return () => unsubscribe();
+  }, [currentUser]);
 
   // Derived Data for Recharts Graph
   const chartData = results

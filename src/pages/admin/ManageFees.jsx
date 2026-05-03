@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, addDoc, getDocs, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { Receipt, Wallet, Calendar, Trash2, CheckCircle2, Clock, Search, AlertCircle, CreditCard, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -16,26 +16,24 @@ const ManageFees = () => {
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
 
-  const fetchFees = async () => {
+  useEffect(() => {
     setLoading(true);
-    try {
-      const q = query(collection(db, "fees"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
+    const q = query(collection(db, "fees"), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       setFees(fetched);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load fee registry");
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (err) => {
+      console.error(err);
+      toast.error("Live financial sync failed");
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchFees();
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -56,8 +54,7 @@ const ManageFees = () => {
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, "fees"), newInvoice);
-      setFees([{ id: docRef.id, ...newInvoice }, ...fees]);
+      await addDoc(collection(db, "fees"), newInvoice);
       toast.success("Financial invoice generated");
       setAmount('');
     } catch (err) {
@@ -76,7 +73,6 @@ const ManageFees = () => {
         status: 'Paid',
         paidAt: new Date().toISOString()
       });
-      setFees(fees.map(f => f.id === id ? { ...f, status: 'Paid' } : f));
       toast.success("Invoice cleared");
     } catch (err) {
       toast.error("Payment update failed");
@@ -87,7 +83,6 @@ const ManageFees = () => {
     if(!window.confirm("Permanently delete this invoice?")) return;
     try {
       await deleteDoc(doc(db, "fees", id));
-      setFees(fees.filter(f => f.id !== id));
       toast.success("Invoice removed");
     } catch(err) {
       toast.error("Delete failed");

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 import { UserCheck, Calendar, Trash2, Clock, Search, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -15,26 +15,24 @@ const ManageAttendance = () => {
   const [status, setStatus] = useState('Present');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); 
 
-  const fetchRecords = async () => {
+  useEffect(() => {
     setLoading(true);
-    try {
-      const q = query(collection(db, "attendance"), orderBy("date", "desc"), limit(50));
-      const querySnapshot = await getDocs(q);
+    const q = query(collection(db, "attendance"), orderBy("date", "desc"), limit(50));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       setRecords(fetched);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load attendance logs");
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (err) => {
+      console.error(err);
+      toast.error("Live attendance sync failed");
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchRecords();
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -53,8 +51,7 @@ const ManageAttendance = () => {
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, "attendance"), newRecord);
-      setRecords([{ id: docRef.id, ...newRecord }, ...records]);
+      await addDoc(collection(db, "attendance"), newRecord);
       
       toast.success(`Success: ${studentId} marked ${status}`);
       setStudentId('');
@@ -70,7 +67,6 @@ const ManageAttendance = () => {
     if(!window.confirm("Permanently delete this attendance record?")) return;
     try {
       await deleteDoc(doc(db, "attendance", id));
-      setRecords(records.filter(r => r.id !== id));
       toast.success("Record purged");
     } catch(err) {
       toast.error("Delete failed");

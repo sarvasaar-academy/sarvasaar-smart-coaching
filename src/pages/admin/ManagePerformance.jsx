@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, limit } from 'firebase/firestore';
 import { Trophy, Target, Trash2, User, BookOpen, Clock, Search, BarChart2, CheckCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -17,26 +17,24 @@ const ManagePerformance = () => {
   const [marks, setMarks] = useState('');
   const [totalMarks, setTotalMarks] = useState('100');
 
-  const fetchResults = async () => {
+  useEffect(() => {
     setLoading(true);
-    try {
-      const q = query(collection(db, "performance"), orderBy("createdAt", "desc"), limit(50));
-      const querySnapshot = await getDocs(q);
+    const q = query(collection(db, "performance"), orderBy("createdAt", "desc"), limit(50));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       setResults(fetched);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to sync metrics");
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (err) => {
+      console.error(err);
+      toast.error("Live performance sync failed");
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchResults();
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -67,8 +65,7 @@ const ManagePerformance = () => {
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, "performance"), newResult);
-      setResults([{ id: docRef.id, ...newResult }, ...results]);
+      await addDoc(collection(db, "performance"), newResult);
       
       toast.success(`Metrics published for ${studentId}`);
       setMarks('');
@@ -84,7 +81,6 @@ const ManagePerformance = () => {
     if(!window.confirm("Permanently archive this performance record?")) return;
     try {
       await deleteDoc(doc(db, "performance", id));
-      setResults(results.filter(r => r.id !== id));
       toast.success("Record archived");
     } catch(err) {
       toast.error("Erasure failed");

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const MaterialView = () => {
   const [materials, setMaterials] = useState([]);
@@ -10,25 +10,25 @@ const MaterialView = () => {
   // Optional: Add filtering by class/subject
   const [filterClass, setFilterClass] = useState('All');
 
-  const fetchMaterials = async () => {
-    try {
-      const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
+  useEffect(() => {
+    setLoading(true);
+    const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       setMaterials(fetched);
-    } catch (err) {
+      setLoading(false);
+      setErrorMsg(null);
+    }, (err) => {
       console.error(err);
       setErrorMsg("Failed to load study materials: " + err.message);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
 
-  useEffect(() => {
-    fetchMaterials();
+    return () => unsubscribe();
   }, []);
 
   const filteredMaterials = filterClass === 'All' 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 
 const AttendanceView = () => {
@@ -9,33 +9,33 @@ const AttendanceView = () => {
   const [errorMsg, setErrorMsg] = useState(null);
   const { currentUser } = useAuth();
   
-  const fetchRecords = useCallback(async () => {
+  useEffect(() => {
     if(!currentUser) return;
-    try {
-      const q = query(
-        collection(db, "attendance"), 
-        where("studentId", "==", currentUser.email || currentUser.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
+    
+    setLoading(true);
+    const q = query(
+      collection(db, "attendance"), 
+      where("studentId", "==", currentUser.email || currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       
       fetched.sort((a,b) => new Date(b.date) - new Date(a.date));
       setRecords(fetched);
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Failed to load attendance logs: " + err.message);
-    } finally {
       setLoading(false);
-    }
-  }, [currentUser]);
+      setErrorMsg(null);
+    }, (err) => {
+      console.error(err);
+      setErrorMsg("Neural link interrupted: " + err.message);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const totalClasses = records.length;
   const presentCount = records.filter(r => r.status === 'Present').length;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 
 const FeeTrackingView = () => {
@@ -11,45 +11,43 @@ const FeeTrackingView = () => {
   
   const [processingId, setProcessingId] = useState(null);
 
-  const fetchInvoices = useCallback(async () => {
+  useEffect(() => {
     if(!currentUser) return;
-    try {
-      const q = query(
-        collection(db, "fees"), 
-        where("studentId", "==", currentUser.email || currentUser.uid)
-      );
-      
-      const querySnapshot = await getDocs(q);
+    
+    setLoading(true);
+    const q = query(
+      collection(db, "fees"), 
+      where("studentId", "==", currentUser.email || currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       
       fetched.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       setInvoices(fetched);
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Failed to load billing history: " + err.message);
-    } finally {
       setLoading(false);
-    }
-  }, [currentUser]);
+      setErrorMsg(null);
+    }, (err) => {
+      console.error(err);
+      setErrorMsg("Neural link interrupted: " + err.message);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const handleSimulatedPayment = async (id) => {
     setProcessingId(id);
     // Simulate payment gateway delay
     setTimeout(async () => {
       try {
-        const feeRef = doc(db, "fees", id);
         await updateDoc(feeRef, {
           status: 'Paid',
           paidAt: new Date().toISOString()
         });
-        setInvoices(invoices.map(f => f.id === id ? { ...f, status: 'Paid' } : f));
       } catch (err) {
         setErrorMsg("Payment transaction failed: " + err.message);
       } finally {

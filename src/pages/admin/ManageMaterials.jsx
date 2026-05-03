@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { storage, db } from '../../firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 import { Cloud, Upload, Trash2, FileText, Download, ExternalLink, Search, Clock, AlertCircle, HardDrive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -18,26 +18,24 @@ const ManageMaterials = () => {
   const [grade, setGrade] = useState('');
   const [file, setFile] = useState(null);
 
-  const fetchMaterials = async () => {
+  useEffect(() => {
     setLoading(true);
-    try {
-      const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
+    const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
       const fetched = [];
-      querySnapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         fetched.push({ id: doc.id, ...doc.data() });
       });
       setMaterials(fetched);
-    } catch (err) {
-      console.error(err);
-      toast.error("Error loading registry");
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (err) => {
+      console.error(err);
+      toast.error("Error syncing registry");
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchMaterials();
+    return () => unsubscribe();
   }, []);
 
   const handleUpload = async (e) => {
@@ -77,8 +75,7 @@ const ManageMaterials = () => {
             createdAt: new Date().toISOString()
           };
           
-          const docRef = await addDoc(collection(db, "materials"), newMaterial);
-          setMaterials([{ id: docRef.id, ...newMaterial }, ...materials]);
+          await addDoc(collection(db, "materials"), newMaterial);
           
           setTitle(''); setSubject(''); setGrade(''); setFile(null);
           document.getElementById('file-upload-input').value = '';
@@ -99,7 +96,6 @@ const ManageMaterials = () => {
       const fileRef = ref(storage, storagePath);
       await deleteObject(fileRef);
       await deleteDoc(doc(db, "materials", id));
-      setMaterials(materials.filter(m => m.id !== id));
       toast.success("Material purged from system");
     } catch (err) {
       toast.error("Erasure failed");
