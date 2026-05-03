@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, getDocs, updateDoc, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { Users, Shield, User, Trash2, ShieldCheck, Mail, Search, Clock, ShieldAlert, Award } from 'lucide-react';
+import { Users, Shield, User, Trash2, ShieldCheck, Mail, Search, Clock, ShieldAlert, Award, RefreshCw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -9,6 +9,7 @@ const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [actionLoading, setActionLoading] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -37,12 +38,15 @@ const ManageUsers = () => {
     if (!window.confirm(`Elevate/Restrict this user to ${newRole.toUpperCase()}?`)) return;
     
     try {
+      setActionLoading(userId);
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, { role: newRole });
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       toast.success(`Access updated to ${newRole}`);
     } catch (err) {
       toast.error("Permission update failed");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -162,7 +166,7 @@ const ManageUsers = () => {
                           {/* Role Toggle Button */}
                           <button 
                             disabled={actionLoading === user.id}
-                            onClick={() => handleRoleToggle(user.id, user.role || 'student')}
+                            onClick={() => toggleRole(user.id, user.role || 'student')}
                             style={{ 
                               background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
                               color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600,
@@ -178,7 +182,7 @@ const ManageUsers = () => {
                           {/* Delete Button */}
                           <button 
                             disabled={actionLoading === user.id}
-                            onClick={() => handleDeleteUser(user.id, user.name)}
+                            onClick={() => deleteUser(user.id)}
                             style={{ 
                               background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer',
                               padding: '0.5rem', borderRadius: '8px', transition: 'all 0.2s', opacity: actionLoading === user.id ? 0.5 : 1
