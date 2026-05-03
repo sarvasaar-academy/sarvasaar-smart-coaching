@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      // Only admins or the user themselves can write
+      allow write: if isAdmin() || request.auth.uid == userId;
+    }
+
+    // Admin exclusive write collections (Students can only read)
+    match /attendance/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /fees/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /materials/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /notifications/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /results/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Student specific collections
+    match /lockers/{docId} {
+      // Students can read/write their own locker documents. Admins can read all.
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.studentId == request.auth.uid || resource.data.studentId == request.auth.token.email);
+      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || request.resource.data.studentId == request.auth.token.email);
+      allow update, delete: if isAuthenticated() && (resource.data.studentId == request.auth.uid || resource.data.studentId == request.auth.token.email || isAdmin());
+    }
+  }
+}

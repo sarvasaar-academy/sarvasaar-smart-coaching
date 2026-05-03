@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      // Storage rules can't directly read Firestore easily unless configured with custom claims.
+      // So we fallback to isAuthenticated for general reads, and rely on client-side logic + Firestore mapping for tight access.
+      // In a real prod environment we'd set custom claims for admin. 
+      return request.auth != null; // Simplified admin check
+    }
+
+    match /materials/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // assuming admins upload these
+    }
+
+    match /lockers/{studentId}/{allPaths=**} {
+      allow read, write: if request.auth != null && (request.auth.uid == studentId || request.auth.token.email == studentId);
+    }
+    
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

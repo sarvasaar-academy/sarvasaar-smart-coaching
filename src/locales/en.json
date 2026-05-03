@@ -1,0 +1,38 @@
+{
+  "navbar": {
+    "home": "Home",
+    "login": "Login",
+    "brand": "SARVASAAR EDUCATION ACADEMY PVT.LTD."
+  },
+  "home": {
+    "title": "Welcome to Sarvasaar Smart Coaching Ecosystem",
+    "subtitle": "Development of a next-generation web application for Sarvasaar Education Academy, featuring a 'Student Resource Vault', 3D Virtual Institute Tour, and a Bilingual Interface to enhance the digital coaching experience using open-source technologies.",
+    "getStarted": "Get Started",
+    "features": {
+      "locker_title": "Student Resource Vault",
+      "locker_desc": "Securely store and access your academic documents, mark sheets, and certificates in the cloud.",
+      "tour_title": "3D Virtual Institute Tour",
+      "tour_desc": "Take an interactive 3D walkthrough of the institute infrastructure right from your screen.",
+      "map_title": "Interactive Maps",
+      "map_desc": "Locate the institute easily with integrated interactive geolocation maps."
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to continue to your dashboard",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "noAccount": "Don't have an account?",
+    "signup": "Sign up"
+  },
+  "dashboard": {
+    "student": {
+      "title": "Student Dashboard",
+      "welcome": "Welcome, Student!",
+      "subtitle": "Your student resource vault, attendance, and tour functions will appear here.",
+      "locker": "My Student Resource Vault",
+      "tour": "Institute Tour"
+    }
+  }
+}
