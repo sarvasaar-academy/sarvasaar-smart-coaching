@@ -5,11 +5,11 @@ import { motion } from 'framer-motion';
 const SchoolMap = () => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // Exact location of Sarvasaar Education Academy in Modasa
-  const lat = "23.4735";
-  const lng = "73.3033";
-  const mapSrc = `https://maps.google.com/maps?q=Sun+Arcade+Complex+Modasa,${lat},${lng}&t=m&z=18&ie=UTF8&iwloc=&output=embed`;
-  const exactLink = "https://www.google.com/maps/search/Sun+Arcade+Complex+Modasa";
+  // Exact location of Gurukul Education and Research (Sarvasaar Academy)
+  const lat = "23.4653654";
+  const lng = "73.3056512";
+  const mapSrc = `https://maps.google.com/maps?q=GURUKUL+EDUCATION+AND+RESEARCH,${lat},${lng}&t=m&z=17&ie=UTF8&iwloc=&output=embed`;
+  const exactLink = "https://www.google.com/maps/place/GURUKUL+EDUCATION+AND+RESEARCH/@23.4653654,73.3030763,17z/";
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%' }}>
