@@ -49,7 +49,7 @@ const ManageNotifications = () => {
         title,
         message,
         type,
-        targetStudent: target === 'All Students' ? 'all' : target,
+        targetStudent: target === 'All Students' ? 'all' : target.toLowerCase(),
         createdAt: new Date().toISOString()
       };
 

@@ -39,7 +39,10 @@ const NotificationsView = () => {
       const fetched = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.targetStudent === 'all' || data.targetStudent === currentUser.email) {
+        const target = data.targetStudent ? data.targetStudent.toLowerCase() : '';
+        const userEmail = currentUser.email ? currentUser.email.toLowerCase() : '';
+        
+        if (target === 'all' || target === userEmail) {
           fetched.push({ id: doc.id, ...data });
         }
       });
